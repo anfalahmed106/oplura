@@ -44,6 +44,8 @@ export function ContactForm() {
   const [values, setValues] = useState<FormState>(INITIAL_STATE);
   const [errors, setErrors] = useState<FieldErrors>({});
   const [submitted, setSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   function update<K extends keyof FormState>(key: K, value: FormState[K]) {
     setValues((prev) => ({ ...prev, [key]: value }));
@@ -66,14 +68,33 @@ export function ContactForm() {
     return next;
   }
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const nextErrors = validate();
     setErrors(nextErrors);
-    if (Object.keys(nextErrors).length === 0) {
-      // Submission wiring (API route / email service) lands in a later phase.
+    if (Object.keys(nextErrors).length > 0) return;
+
+    setSubmitError(null);
+    setIsSubmitting(true);
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(values),
+      });
+
+      if (!res.ok) {
+        throw new Error("Request failed");
+      }
+
       setSubmitted(true);
       setValues(INITIAL_STATE);
+    } catch {
+      setSubmitError(
+        "Something went wrong sending your details. Please try again or reach out directly."
+      );
+    } finally {
+      setIsSubmitting(false);
     }
   }
 
@@ -218,8 +239,10 @@ export function ContactForm() {
         </select>
       </div>
 
-      <Button type="submit" size="lg" className="w-full sm:w-auto">
-        Submit
+      {submitError && <p className={errorClasses}>{submitError}</p>}
+
+      <Button type="submit" size="lg" className="w-full sm:w-auto" disabled={isSubmitting}>
+        {isSubmitting ? "Sending..." : "Submit"}
       </Button>
     </form>
   );
