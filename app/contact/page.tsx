@@ -20,7 +20,7 @@ export default function ContactPage() {
           <p className="text-h6 uppercase text-accent-primary">Contact</p>
           <h1 className="mt-3 text-h1">Let&apos;s talk about your operation</h1>
           <p className="mt-4 text-body text-text-secondary">
-            Pick whatever&apos;s easiest â€” a call, email, or WhatsApp.
+            Pick whatever&apos;s easiest — a call, email, or WhatsApp.
           </p>
         </div>
 

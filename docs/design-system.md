@@ -1,8 +1,8 @@
-﻿# Oplura Design System â€” Reference
+﻿# Oplura Design System — Reference
 
 Tokens live in `styles/tokens.css` (CSS custom properties, themed via
 `[data-theme]`) and are exposed as Tailwind utilities via `tailwind.config.ts`.
-Never hardcode a hex value or px size in a component â€” use the Tailwind
+Never hardcode a hex value or px size in a component — use the Tailwind
 class (`bg-accent-primary`, `text-h3`, `p-6`, etc.) or the CSS var directly.
 
 ## Color
@@ -21,7 +21,7 @@ class (`bg-accent-primary`, `text-h3`, `p-6`, etc.) or the CSS var directly.
 
 Dark-mode accent values are brightened one step from their light-mode
 counterparts (e.g. `#2563EB` â†’ `#3B82F6`) to hold AA contrast against the
-`#0F172A` surface â€” same brand color, adjusted for the darker backdrop.
+`#0F172A` surface — same brand color, adjusted for the darker backdrop.
 
 ## Typography
 

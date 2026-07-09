@@ -33,7 +33,7 @@ const APPROACH = [
     icon: Compass,
     title: "Accountable after launch",
     description:
-      "We stay attached to what we build â€” fixing, tuning, and extending it as your operation changes, not disappearing after handover.",
+      "We stay attached to what we build — fixing, tuning, and extending it as your operation changes, not disappearing after handover.",
   },
 ];
 
@@ -48,8 +48,8 @@ export default function AboutPage() {
 
         <div className="mt-10 max-w-3xl space-y-6 text-body text-text-secondary">
           <p>
-            Oplura started from a simple frustration: too many operational teams â€” in construction,
-            logistics, and field services â€” were running critical parts of their business through
+            Oplura started from a simple frustration: too many operational teams — in construction,
+            logistics, and field services — were running critical parts of their business through
             spreadsheets, WhatsApp threads, and paper checklists never designed for the job. The
             software that was supposed to help either didn&apos;t fit the work, or cost more to
             configure than to build from scratch.
@@ -60,8 +60,8 @@ export default function AboutPage() {
             years later.
           </p>
           <p>
-            Our mission is to remove the operational bottlenecks â€” the manual data entry, the
-            duplicate paperwork, the status updates chased over the phone â€” that quietly cost
+            Our mission is to remove the operational bottlenecks — the manual data entry, the
+            duplicate paperwork, the status updates chased over the phone — that quietly cost
             operational businesses the most time and money, without adding another tool nobody
             wants to use.
           </p>
@@ -73,7 +73,7 @@ export default function AboutPage() {
           <p className="text-h6 uppercase text-accent-secondary">Why we build this way</p>
           <h2 className="mt-3 text-h2">Enterprise-grade discipline, applied to systems of every size</h2>
           <p className="mt-4 text-body text-text-on-dark-secondary">
-            We treat every project â€” whether it&apos;s a single dashboard or a full client portal â€”
+            We treat every project — whether it&apos;s a single dashboard or a full client portal —
             with the same rigor a much larger engineering team would apply.
           </p>
         </div>

@@ -5,7 +5,7 @@ const DIFFERENTIATORS = [
   {
     icon: ShieldCheck,
     title: "Not template-based",
-    description: "Every system is built for your actual process â€” nothing off-the-shelf and repurposed.",
+    description: "Every system is built for your actual process — nothing off-the-shelf and repurposed.",
   },
   {
     icon: Layers,
@@ -15,7 +15,7 @@ const DIFFERENTIATORS = [
   {
     icon: Sparkles,
     title: "AI only where it adds value",
-    description: "No AI for its own sake â€” it goes in only where it genuinely saves time or reduces error.",
+    description: "No AI for its own sake — it goes in only where it genuinely saves time or reduces error.",
   },
   {
     icon: LifeBuoy,
@@ -25,7 +25,7 @@ const DIFFERENTIATORS = [
   {
     icon: DollarSign,
     title: "Transparent pricing",
-    description: "Clear scope and cost up front â€” no surprise invoices or vague retainers.",
+    description: "Clear scope and cost up front — no surprise invoices or vague retainers.",
   },
   {
     icon: Zap,

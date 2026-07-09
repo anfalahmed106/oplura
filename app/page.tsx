@@ -11,7 +11,7 @@ import { Reveal } from "@/components/ui/Reveal";
 export default function HomePage() {
   return (
     <>
-      {/* Hero renders immediately, above the fold â€” no scroll-reveal delay */}
+      {/* Hero renders immediately, above the fold — no scroll-reveal delay */}
       <Hero />
       <Reveal>
         <TrustStrip />

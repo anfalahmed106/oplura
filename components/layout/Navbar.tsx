@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Menu, Moon, Sun, X } from "lucide-react";
 import { useState } from "react";
 import { primaryNav, primaryCta } from "@/lib/navigation";
@@ -11,6 +12,7 @@ import { Button } from "@/components/ui/Button";
 export function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const { theme, toggleTheme } = useTheme();
+  const pathname = usePathname();
 
   return (
     <header className="sticky top-0 z-40 h-[--header-height] border-b border-border bg-bg/90 backdrop-blur">
@@ -37,14 +39,25 @@ export function Navbar() {
         </Link>
 
         <nav aria-label="Primary" className="hidden md:block">
-          <ul className="flex items-center gap-8">
-            {primaryNav.map((item) => (
-              <li key={item.href}>
-                <Link href={item.href} className="text-small text-text-secondary hover:text-text-primary">
-                  {item.label}
-                </Link>
-              </li>
-            ))}
+          <ul className="flex items-center gap-2">
+            {primaryNav.map((item) => {
+              const isActive = item.href === "/" ? pathname === "/" : pathname?.startsWith(item.href);
+              return (
+                <li key={item.href}>
+                  <Link
+                    href={item.href}
+                    aria-current={isActive ? "page" : undefined}
+                    className={
+                      isActive
+                        ? "rounded-full bg-bg-muted px-4 py-2 text-small font-medium text-text-primary"
+                        : "rounded-full px-4 py-2 text-small text-text-secondary hover:text-text-primary"
+                    }
+                  >
+                    {item.label}
+                  </Link>
+                </li>
+              );
+            })}
           </ul>
         </nav>
 

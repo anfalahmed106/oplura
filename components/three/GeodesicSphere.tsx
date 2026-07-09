@@ -238,7 +238,7 @@ export default function GeodesicSphere({
   }, [edges, nodePositions]);
 
   // Slow, linear, single-axis auto-rotation, plus a gentle eased tilt toward
-  // the cursor layered on top â€” subtle enough to feel alive without turning
+  // the cursor layered on top — subtle enough to feel alive without turning
   // into a gimmick. Falls back to pure auto-rotation when there's no pointer.
   useFrame((_state, delta) => {
     if (!groupRef.current) return;

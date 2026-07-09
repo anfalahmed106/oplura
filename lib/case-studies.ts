@@ -30,8 +30,8 @@ export const caseStudies: CaseStudy[] = [
       "A full-stack website and student management system for an online tutoring academy, combining a marketing/enrollment site with a secure PHP/MySQL admin backend for managing students and staff access.",
     fullDetail:
       "Designed and built a complete web presence and internal operations system for an online education academy. The public-facing site handles course discovery, pricing, service information, and lead generation through free-trial and enrollment forms that feed directly into the backend. The admin panel gives staff student record management (add/edit/export), while security is hardened with two-factor authentication (TOTP, HMAC-SHA1-based), bcrypt-hashed admin passwords and backup codes, SHA-256-hashed password-reset tokens, configurable security settings, and a full audit log tracking admin actions for accountability. Built with a custom PHP backend and MySQL database, with .htaccess-level access restrictions on the admin directory, delivering a production-ready, secure platform rather than a static brochure site.",
-    thumbnailImage: "/images/case-studies/online-tutoring-academy-thumbnail.png",
-    mockupImage: "/images/case-studies/online-tutoring-academy-thumbnail.png",
+    thumbnailImage: "/images/case-studies/online-tutoring-academy-thumbnail-v2.png",
+    mockupImage: "/images/case-studies/online-tutoring-academy-thumbnail-v2.png",
     videoUrl: "https://www.youtube.com/embed/mF8Cl2fiOzI",
     screenshots: [
       {
