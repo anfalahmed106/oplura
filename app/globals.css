@@ -1,0 +1,82 @@
+@import "../styles/tokens.css";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-bg text-text-primary font-sans text-body;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Respect reduced-motion preferences globally, per the accessibility floor. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+
+  /* Consistent, visible keyboard focus everywhere — never suppressed. */
+  :focus-visible {
+    outline: 2px solid var(--color-focus-ring);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply text-text-primary;
+  }
+
+  a {
+    color: inherit;
+  }
+
+  .theme-logo-dark {
+    display: none;
+  }
+
+  [data-theme="dark"] .theme-logo-light {
+    display: none;
+  }
+
+  [data-theme="dark"] .theme-logo-dark {
+    display: block;
+  }
+
+  .hero-visual {
+    transform: translateZ(0);
+  }
+
+  .hero-visual-glow {
+    backface-visibility: hidden;
+    pointer-events: none;
+    transform: translateZ(0);
+    will-change: auto;
+  }
+
+  .hero-visual-canvas,
+  .hero-visual-canvas canvas {
+    backface-visibility: hidden;
+    transform: translateZ(0);
+  }
+}
