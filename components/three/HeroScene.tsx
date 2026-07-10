@@ -5,44 +5,81 @@ import { Canvas, useFrame, type RootState } from "@react-three/fiber";
 import { PerformanceMonitor } from "@react-three/drei";
 import GeodesicSphere, { type QualityTier } from "./GeodesicSphere";
 import { HeroSceneFallback } from "./HeroSceneFallback";
+import { useTheme } from "@/lib/theme";
 
 const QUALITY_ORDER: QualityTier[] = ["low", "medium", "high"];
 
-/** True genuine blockers: assistive-tech preference, very low RAM, or no WebGL2. */
-function hasHardConstraint() {
-  if (typeof window === "undefined") return true;
-
-  const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const memory = (navigator as Navigator & { deviceMemory?: number }).deviceMemory;
-  const lowMemory = typeof memory === "number" && memory <= 4;
-
-  return reducedMotion || lowMemory || !supportsWebGL2();
-}
+type WebGLSupport = { supported: boolean; version: 1 | 2 | null };
 
 /**
- * A cheap, synchronous probe using a throwaway canvas. Some browsers/WebViews
- * (older Android system WebViews, some in-app browsers) either lack WebGL2 or
- * silently fail to construct a context — this catches that upfront instead of
- * letting the real Canvas hang or render a blank frame.
+ * Cheap, synchronous probe using a throwaway canvas.
+ *
+ * We accept EITHER WebGL2 or WebGL1. three.js / @react-three/fiber already
+ * fall back to WebGL1 automatically when WebGL2 isn't available, so a probe
+ * that only checks for WebGL2 rejects devices that would have rendered just
+ * fine. We only treat a device as genuinely unsupported when NEITHER
+ * context can be created (GPU disabled, ancient browser, some locked-down
+ * in-app WebViews) — that's the one case three.js truly cannot recover from.
  */
-function supportsWebGL2() {
+function detectWebGLSupport(): WebGLSupport {
   try {
     const canvas = document.createElement("canvas");
-    const gl = canvas.getContext("webgl2");
-    const ok = !!gl;
-    gl?.getExtension("WEBGL_lose_context")?.loseContext();
-    return ok;
+
+    const gl2 = canvas.getContext("webgl2");
+    if (gl2) {
+      gl2.getExtension("WEBGL_lose_context")?.loseContext();
+      return { supported: true, version: 2 };
+    }
+
+    const gl1 = (canvas.getContext("webgl") ??
+      canvas.getContext("experimental-webgl")) as WebGLRenderingContext | null;
+    if (gl1) {
+      gl1.getExtension("WEBGL_lose_context")?.loseContext();
+      return { supported: true, version: 1 };
+    }
+
+    return { supported: false, version: null };
   } catch {
-    return false;
+    return { supported: false, version: null };
   }
 }
 
+/**
+ * True hard blockers only: an explicit accessibility preference
+ * (prefers-reduced-motion, always respected — this is a user choice, not a
+ * guess) or a device that cannot create a WebGL context of any kind.
+ *
+ * Everything else — perceived "low" RAM, CPU core count, WebGL1 vs WebGL2 —
+ * is deliberately NOT used to block rendering. Those signals are known to
+ * be unreliable in isolation (browsers round/cap them for privacy, and
+ * plenty of capable devices under-report), so we only ever use them below
+ * to pick a conservative *starting* tier. PerformanceMonitor measures real
+ * frame timing at runtime and corrects the tier from there — a wrong guess
+ * costs a second of visual polish, never correctness.
+ */
+function hasHardConstraint(webgl: WebGLSupport): boolean {
+  if (typeof window === "undefined") return true;
+  const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  return reducedMotion || !webgl.supported;
+}
+
 /** Used only to pick a sensible *starting* tier — PerformanceMonitor corrects it from there. */
-function initialTierGuess(): QualityTier {
+function initialTierGuess(webgl: WebGLSupport): QualityTier {
   if (typeof window === "undefined") return "medium";
+
   const isTouch = window.matchMedia("(pointer: coarse)").matches;
   const isSmall = window.matchMedia("(max-width: 767px)").matches;
-  return isTouch || isSmall ? "low" : "medium";
+  const memory = (navigator as Navigator & { deviceMemory?: number }).deviceMemory;
+  const cores = navigator.hardwareConcurrency;
+
+  const looksConstrained =
+    isTouch ||
+    isSmall ||
+    webgl.version === 1 ||
+    (typeof memory === "number" && memory <= 4) ||
+    (typeof cores === "number" && cores <= 4);
+
+  return looksConstrained ? "low" : "medium";
 }
 
 /** Fires once, the first time a real frame is actually rendered by the GPU. */
@@ -58,6 +95,7 @@ function FirstFrameAck({ onFirstFrame }: { onFirstFrame: () => void }) {
 }
 
 export default function HeroScene() {
+  const { theme } = useTheme();
   const wrapperRef = useRef<HTMLDivElement>(null);
   const pointer = useRef({ x: 0, y: 0 });
   const rendererRef = useRef<RootState["gl"] | null>(null);
@@ -69,6 +107,7 @@ export default function HeroScene() {
   const [firstFrameRendered, setFirstFrameRendered] = useState(false);
 
   const [tier, setTier] = useState<QualityTier>("medium");
+  const [tierLocked, setTierLocked] = useState(false);
   const [dprFactor, setDprFactor] = useState(0.5); // 0..1, smoothed by PerformanceMonitor
 
   const [inViewport, setInViewport] = useState(true);
@@ -76,18 +115,21 @@ export default function HeroScene() {
 
   // One-time capability check + starting quality guess.
   useEffect(() => {
-    setBlocked(hasHardConstraint());
-    setTier(initialTierGuess());
+    const webgl = detectWebGLSupport();
+    setBlocked(hasHardConstraint(webgl));
+    setTier(initialTierGuess(webgl));
   }, []);
 
-  // Watchdog: if we never get a real rendered frame within a few seconds,
+  // Watchdog: if we never get a real rendered frame within a generous window,
   // something is wrong on this device/browser (stuck shader compile, driver
-  // issue, etc.) — drop to the static fallback instead of leaving a blank hero.
+  // issue, etc.) — drop to the static fallback instead of leaving a blank
+  // hero. Window is intentionally generous since low-end devices can take
+  // noticeably longer to compile shaders on first paint.
   useEffect(() => {
     if (blocked) return;
     const timer = setTimeout(() => {
       if (!firstFrameRendered) setMountFailed(true);
-    }, 4500);
+    }, 6000);
     return () => clearTimeout(timer);
   }, [blocked, firstFrameRendered]);
 
@@ -155,28 +197,43 @@ export default function HeroScene() {
   }
 
   const handleIncline = useCallback(() => {
+    if (tierLocked) return;
     setTier((current) => {
       const idx = QUALITY_ORDER.indexOf(current);
       return QUALITY_ORDER[Math.min(idx + 1, QUALITY_ORDER.length - 1)]!;
     });
-  }, []);
+  }, [tierLocked]);
 
   const handleDecline = useCallback(() => {
+    if (tierLocked) return;
     setTier((current) => {
       const idx = QUALITY_ORDER.indexOf(current);
       return QUALITY_ORDER[Math.max(idx - 1, 0)]!;
     });
+  }, [tierLocked]);
+
+  // If the device keeps flip-flopping between tiers (PerformanceMonitor's
+  // own signal that it can't find a stable operating point), stop chasing
+  // it: settle permanently at "low" and lock further adjustments. A stable
+  // low-quality scene beats a scene that never stops re-adjusting.
+  const handleFallback = useCallback(() => {
+    setTier("low");
+    setTierLocked(true);
   }, []);
 
   const handlePerfChange = useCallback((api: { factor: number }) => {
     setDprFactor(api.factor);
   }, []);
 
-  // dpr scales continuously with measured headroom (1x - 1.5x); tier (segment
-  // counts / light count) steps discretely with hysteresis so geometry isn't
-  // rebuilt on every small fluctuation.
-  const dpr = useMemo(() => 1 + dprFactor * 0.5, [dprFactor]);
-  const isLowTier = tier === "low";
+  // dpr scales continuously with measured headroom within a per-tier range.
+  // Native WebGL anti-aliasing is deliberately OFF (see gl config below) —
+  // instead we lean on this supersampling to smooth edges, since that's the
+  // approach that also fixes the fringing bug native MSAA can't fix here.
+  const dpr = useMemo(() => {
+    const [minDpr, maxDpr] =
+      tier === "low" ? [1, 1.35] : tier === "medium" ? [1.25, 1.75] : [1.5, 2];
+    return minDpr + dprFactor * (maxDpr - minDpr);
+  }, [dprFactor, tier]);
 
   if (blocked || contextLost || mountFailed) {
     return <HeroSceneFallback />;
@@ -195,10 +252,17 @@ export default function HeroScene() {
         frameloop={frameloop}
         gl={{
           alpha: true,
-          antialias: !isLowTier,
+          // Native MSAA resolves incorrectly against a transparent (alpha)
+          // canvas in WebGL — it leaves faint dark fringes on every edge,
+          // barely visible on a dark page background but clearly visible on
+          // a light one (exactly the "pixelated in light mode" symptom).
+          // Turning it off and relying on the dpr supersampling above
+          // avoids that bug entirely instead of just hiding it.
+          antialias: false,
           premultipliedAlpha: false,
           stencil: false,
           powerPreference: "default",
+          failIfMajorPerformanceCaveat: false,
         }}
         camera={{ position: [0, 0.5, 7.5], fov: 40 }}
         style={{ background: "transparent" }}
@@ -208,6 +272,7 @@ export default function HeroScene() {
         <PerformanceMonitor
           onIncline={handleIncline}
           onDecline={handleDecline}
+          onFallback={handleFallback}
           onChange={handlePerfChange}
           flipflops={3}
         />
@@ -218,6 +283,7 @@ export default function HeroScene() {
             rotationSpeed={1}
             pointer={pointer}
             quality={tier}
+            theme={theme}
             colors={{
               base: "#1F2937",
               cyan: "#2563EB",
