@@ -146,10 +146,9 @@ function buildTruncatedIcosahedron(radius: number): { nodePositions: Vec3[]; edg
 
 export type QualityTier = "low" | "medium" | "high";
 
-const QUALITY_SETTINGS: Record
-  QualityTier,
-  { sphereSegments: number; cylinderSegments: number; lightTier: 1 | 2 | 3 }
-> = {
+type QualitySetting = { sphereSegments: number; cylinderSegments: number; lightTier: 1 | 2 | 3 };
+
+const QUALITY_SETTINGS: Record<QualityTier, QualitySetting> = {
   // lightTier 1 = ambient + directional + 1 accent point (3 lights)
   // lightTier 2 = + 1 more accent point (4 lights)
   // lightTier 3 = full original 6-light setup
