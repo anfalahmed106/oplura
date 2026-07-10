@@ -146,7 +146,7 @@ function buildTruncatedIcosahedron(radius: number): { nodePositions: Vec3[]; edg
 
 export type QualityTier = "low" | "medium" | "high";
 
-const QUALITY_SETTINGS: Record<
+const QUALITY_SETTINGS: Record
   QualityTier,
   { sphereSegments: number; cylinderSegments: number; lightTier: 1 | 2 | 3 }
 > = {
@@ -156,7 +156,7 @@ const QUALITY_SETTINGS: Record<
   //
   // cylinderSegments used to be as low as 3-4 (a literal triangular/square
   // prism standing in for a "rod"), which is the main source of the visible
-  // faceting/pixelation on rotation — each flat face catches specular light
+  // faceting/pixelation on rotation - each flat face catches specular light
   // differently frame to frame. Instance count (90 rods, 60 nodes) is fixed
   // and tiny, so raising segment counts is essentially free GPU-wise; it's
   // pure vertex count on a shared, instanced geometry, not per-instance cost.
@@ -169,7 +169,7 @@ const QUALITY_SETTINGS: Record<
  * Adds a view-angle-dependent rim/fresnel glow to a standard material via a
  * shader patch. This is the standard technique for keeping a silhouette
  * readable against *any* background (light or dark) without hand-tuning
- * exact colors per background — edges facing away from the camera get a
+ * exact colors per background - edges facing away from the camera get a
  * thin bright highlight, which both:
  *  (a) fixes low-contrast readability in dark mode, and
  *  (b) visually "sharpens" edges, masking any residual softness from
@@ -200,7 +200,17 @@ function applyFresnelRim(
       )
       .replace(
         "#include <dithering_fragment>",
-        `float rimFacing = 1.0 - saturate( dot( normalize( vNormal ), normalize( vViewPosition ) ) );
+        // vNormal isn't declared at all when the material uses flatShading
+        // (three.js derives the face normal from screen-space derivatives
+        // instead) - mirror that same branch here rather than assuming
+        // vNormal exists, so this works on both the flat-shaded rods and
+        // the smooth-shaded node spheres.
+        `#ifdef FLAT_SHADED
+           vec3 rimNormal = normalize( cross( dFdx( vViewPosition ), dFdy( vViewPosition ) ) );
+         #else
+           vec3 rimNormal = normalize( vNormal );
+         #endif
+         float rimFacing = 1.0 - saturate( dot( rimNormal, normalize( vViewPosition ) ) );
          float rimFresnel = pow( rimFacing, uRimPower );
          gl_FragColor.rgb += uRimColor * rimFresnel * uRimIntensity;
          #include <dithering_fragment>`,
@@ -219,9 +229,9 @@ export interface GeodesicSphereProps extends Omit<GroupProps, "scale"> {
   autoRotate?: boolean;
   /** Normalized (-1..1) pointer position, updated externally without re-renders. */
   pointer?: MutableRefObject<{ x: number; y: number }>;
-  /** Render quality tier — driven by measured runtime performance, not a device guess. */
+  /** Render quality tier - driven by measured runtime performance, not a device guess. */
   quality?: QualityTier;
-  /** Current site theme — brightens lighting and rim glow in dark mode for readability. */
+  /** Current site theme - brightens lighting and rim glow in dark mode for readability. */
   theme?: "light" | "dark";
 }
 
@@ -317,13 +327,13 @@ export default function GeodesicSphere({
   }, [rimColor, rimIntensity, rimPower]);
 
   // Slow, linear, single-axis auto-rotation, plus a gentle eased tilt toward
-  // the cursor layered on top â€” subtle enough to feel alive without turning
+  // the cursor layered on top - subtle enough to feel alive without turning
   // into a gimmick. Falls back to pure auto-rotation when there's no pointer.
   useFrame((_state, delta) => {
     if (!groupRef.current) return;
 
     if (autoRotate) {
-      groupRef.current.rotation.y += delta * ((Math.PI * 2) / 24) * rotationSpeed; // 360Â° / 24s
+      groupRef.current.rotation.y += delta * ((Math.PI * 2) / 24) * rotationSpeed; // 360deg / 24s
     }
 
     if (pointer) {
@@ -403,4 +413,4 @@ export default function GeodesicSphere({
       </instancedMesh>
     </group>
   );
-   }
+}
