@@ -15,7 +15,7 @@ export function Navbar() {
   const pathname = usePathname();
 
   return (
-    <header className="sticky top-0 z-40 h-[--header-height] border-b border-border bg-bg/90 backdrop-blur">
+    <header className="sticky top-0 z-40 h-[--header-height] border-b border-border bg-bg/95 backdrop-blur [@media(pointer:coarse)]:backdrop-blur-none">
       <div className="mx-auto flex h-full w-full max-w-container items-center justify-between px-4 md:px-8">
         <Link href="/" className="flex shrink-0 items-center" aria-label="Oplura home">
           <Image
