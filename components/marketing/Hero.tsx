@@ -38,7 +38,7 @@ export function Hero() {
         <div className="hero-visual relative isolate aspect-square w-full max-w-lg justify-self-center lg:max-w-none">
           <div
             aria-hidden="true"
-            className="hero-visual-glow absolute inset-0 rounded-full opacity-40 blur-3xl"
+            className="hero-visual-glow absolute inset-0 rounded-full opacity-40 blur-3xl [@media(pointer:coarse)]:blur-xl"
             style={{
               background:
                 "radial-gradient(circle, var(--color-accent-primary) 0%, transparent 65%)",
