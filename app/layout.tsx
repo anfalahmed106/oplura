@@ -25,9 +25,10 @@ export const metadata: Metadata = {
   description: "Enterprise-grade software, automation, and secure systems engineering for UK SMEs.",
   icons: {
     icon: [
-      { url: "/logo-light.png", type: "image/png" },
+      { url: "/icon-32x32.png", sizes: "32x32", type: "image/png" },
+      { url: "/icon-192x192.png", sizes: "192x192", type: "image/png" },
     ],
-    apple: [{ url: "/logo-light.png", type: "image/png" }],
+    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
   },
   openGraph: {
     title: "Oplura",
