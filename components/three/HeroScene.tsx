@@ -112,6 +112,7 @@ export default function HeroScene() {
 
   const [inViewport, setInViewport] = useState(true);
   const [tabVisible, setTabVisible] = useState(true);
+  const [scrolling, setScrolling] = useState(false);
 
   // One-time capability check + starting quality guess.
   useEffect(() => {
@@ -136,6 +137,13 @@ export default function HeroScene() {
   // Pause rendering entirely when the hero scrolls off-screen or the tab is
   // backgrounded — avoids the sustained GPU load that causes lag/thermal
   // throttling on phones and battery/fan spin on laptops.
+  //
+  // rootMargin trims 15% off the bottom of the observed area, so the scene
+  // is treated as "out of view" a little before the literal last pixel
+  // leaves the screen (and considered "in view" again a little before it's
+  // technically back) — that last sliver isn't worth the render cost, and
+  // this avoids the canvas still actively rendering during the exact moment
+  // it's being scrolled past.
   useEffect(() => {
     const el = wrapperRef.current;
     if (!el) return;
@@ -144,7 +152,8 @@ export default function HeroScene() {
       const entry = entries[0];
       if (entry) setInViewport(entry.isIntersecting);
     }, {
-      threshold: 0.01,
+      threshold: 0,
+      rootMargin: "0px 0px -15% 0px",
     });
     io.observe(el);
 
@@ -154,6 +163,29 @@ export default function HeroScene() {
     return () => {
       io.disconnect();
       document.removeEventListener("visibilitychange", handleVisibility);
+    };
+  }, []);
+
+  // Pause rendering during active scrolling, not just based on visibility.
+  // A WebGL canvas pushing frames via requestAnimationFrame competes with
+  // the browser's compositor thread for exactly the frames where a scroll
+  // gesture is being handled — this is usually the single biggest cause of
+  // visible jank right as the hero scrolls past, independent of how much of
+  // the canvas is still technically on-screen. Resumes ~150ms after
+  // scrolling stops, well under human perception for "when did the model
+  // start moving again." The passive:true listener is important — without
+  // it, this handler could itself block the browser's scroll handling.
+  useEffect(() => {
+    let resumeTimer: ReturnType<typeof setTimeout>;
+    const handleScroll = () => {
+      setScrolling((prev) => (prev ? prev : true));
+      clearTimeout(resumeTimer);
+      resumeTimer = setTimeout(() => setScrolling(false), 150);
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      clearTimeout(resumeTimer);
     };
   }, []);
 
@@ -239,7 +271,7 @@ export default function HeroScene() {
     return <HeroSceneFallback />;
   }
 
-  const frameloop = inViewport && tabVisible ? "always" : "never";
+  const frameloop = inViewport && tabVisible && !scrolling ? "always" : "never";
 
   return (
     <div
